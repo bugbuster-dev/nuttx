@@ -507,23 +507,47 @@
  * In addition, external FSMC SRAM may be available.
  */
 
+/*
+STM32G474xX datasheet DS12288 Rev 6
+-----------------------------------
+
+3.5 Embedded SRAM
+STM32G474xB/xC/xE devices feature 128 Kbytes of embedded SRAM. This SRAM is split
+into three blocks:
+• 80 Kbytes mapped at address 0x2000 0000 (SRAM1). The CM4 can access the
+SRAM1 through the System Bus (or through the I-Code/D-Code buses when boot from
+SRAM1 is selected or when physical remap is selected by SYSCFG_MEMRMP
+register). The first 32 Kbytes of SRAM1 support hardware parity check.
+• 16 Kbytes mapped at address 0x2001 4000 (SRAM2). The CM4 can access the
+SRAM2 through the System bus. SRAM2 can be retained in standby modes.
+• 32 Kbytes mapped at address 0x1000 0000 (CCM SRAM). It is accessed by the CPU
+through I-Code/D-Code bus for maximum performance.
+It is also aliased at 0x2001 8000 address to be accessed by all masters (CPU, DMA1,
+DMA2) through SBUS contiguously to SRAM1 and SRAM2. The CCM SRAM supports
+hardware parity check and can be write-protected with 1-Kbyte granularity.
+• The memory can be accessed in read/write at max CPU clock speed with 0 wait states.
+
+STM32G491xx/G431xx CCM SRAM can also be accessed by all masters.
+
+CONCLUSION: for G474/G491/G431 CCM SRAM can be included for heap.
+*/
+
 #elif defined(CONFIG_STM32_STM32G4XXX)
 
 /* Set the end of system SRAM */
 
-#if defined(CONFIG_STM32_STM32G47XX)
-#  define SRAM1_END                    0x20020000
-#elif defined(CONFIG_STM32_STM32G43XX)
-#  define SRAM1_END                    0x20005800
-#else
-#  error "Unsupported STM32G4 chip"
-#endif
+#  define SRAM1_END                    CONFIG_RAM_END
 
 /* Set the range of CCM SRAM as well (although we may not use it) */
-
+/*
+ * a bit confusing, SRAM2 meaning here below is CCM SRAM which is
+ * *not* the SRAM2 mentioned in the datasheet
+ */
 #  define SRAM2_START                  0x10000000
 
-#if defined(CONFIG_STM32_STM32G47XX)
+#if defined(CONFIG_STM32_STM32G49XX)
+#    define SRAM2_END                  0x10004000
+#elif defined(CONFIG_STM32_STM32G47XX)
 #    define SRAM2_END                  0x10008000
 #elif defined(CONFIG_STM32_STM32G43XX)
 #    define SRAM2_END                  0x10002700
